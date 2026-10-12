@@ -1,6 +1,24 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
+@{
+    ViewData["Title"] = "Student Privacy & Anonymity Policy";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="container py-4" style="max-width: 800px;">
+    <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">🔒 Anonymity & Data Policy</h1>
+    <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+        WhisperSpace was designed from the ground up to respect student privacy and facilitate safe peer discussions.
+    </p>
+
+    <div class="form-card">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">No Identifiers Collected</h3>
+        <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.25rem;">
+            When submitting thoughts or comments, no account registration is required. We do not store IP logs or student profile data with your posts.
+        </p>
+
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Content Moderation</h3>
+        <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.25rem;">
+            To prevent abuse, any post reported by community peers is reviewed by the student moderation team in the admin dashboard. Posts violating campus safety guidelines will be hidden or removed.
+        </p>
+
+        <a asp-controller="Home" asp-action="Guidelines" class="btn-primary-custom">Read Community Guidelines</a>
+    </div>
+</div>

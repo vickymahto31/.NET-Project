@@ -1,0 +1,159 @@
+@model FeedViewModel
+@{
+    ViewData["Title"] = "Community Feed";
+}
+
+<div class="container py-4">
+    <!-- Header Title -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+        <div>
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.25rem;">
+                @(Model.SelectedCategoryName != null ? Model.SelectedCategoryName : "All Campus Thoughts")
+            </h1>
+            <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 0;">
+                Showing @Model.TotalPostsCount anonymous @(Model.TotalPostsCount == 1 ? "thought" : "thoughts") shared by peers.
+            </p>
+        </div>
+
+        <a asp-controller="Posts" asp-action="Create" asp-route-categoryId="@Model.SelectedCategoryId" class="btn-primary-custom">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Write Confession / Vent
+        </a>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="feed-header-bar">
+        <form method="get" asp-controller="Posts" asp-action="Index" class="feed-filter-form">
+            <!-- Keyword Search -->
+            <div class="search-input-group">
+                <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" name="search" value="@Model.SearchTerm" placeholder="Search by topic, syllabus, backlog, placement..." />
+            </div>
+
+            <!-- Category Filter -->
+            <select name="categoryId" class="select-filter" onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                @foreach (var cat in Model.Categories)
+                {
+                    <option value="@cat.CategoryId" selected="@(Model.SelectedCategoryId == cat.CategoryId ? "selected" : null)">
+                        @cat.Name (@cat.PostCount)
+                    </option>
+                }
+            </select>
+
+            <!-- Mood Filter -->
+            <select name="mood" class="select-filter" onchange="this.form.submit()">
+                <option value="">All Moods</option>
+                <option value="Overwhelmed" selected="@(Model.SelectedMood == "Overwhelmed" ? "selected" : null)">😰 Overwhelmed</option>
+                <option value="Anxious" selected="@(Model.SelectedMood == "Anxious" ? "selected" : null)">😟 Anxious</option>
+                <option value="Heartbroken" selected="@(Model.SelectedMood == "Heartbroken" ? "selected" : null)">💔 Heartbroken</option>
+                <option value="Seeking Advice" selected="@(Model.SelectedMood == "Seeking Advice" ? "selected" : null)">💡 Seeking Advice</option>
+                <option value="Venting" selected="@(Model.SelectedMood == "Venting" ? "selected" : null)">😤 Venting</option>
+                <option value="Humorous" selected="@(Model.SelectedMood == "Humorous" ? "selected" : null)">😂 Humorous</option>
+                <option value="Grateful" selected="@(Model.SelectedMood == "Grateful" ? "selected" : null)">🙏 Grateful</option>
+            </select>
+
+            <!-- Sort By -->
+            <select name="sort" class="select-filter" onchange="this.form.submit()">
+                <option value="latest" selected="@(Model.SortBy == "latest" ? "selected" : null)">Latest First</option>
+                <option value="popular" selected="@(Model.SortBy == "popular" ? "selected" : null)">Most Supported ❤️</option>
+                <option value="discussed" selected="@(Model.SortBy == "discussed" ? "selected" : null)">Most Discussed 💬</option>
+            </select>
+
+            <noscript>
+                <button type="submit" class="btn-outline-custom">Filter</button>
+            </noscript>
+        </form>
+    </div>
+
+    <!-- Active Filters Reset Badge -->
+    @if (!string.IsNullOrEmpty(Model.SearchTerm) || Model.SelectedCategoryId.HasValue || !string.IsNullOrEmpty(Model.SelectedMood))
+    {
+        <div class="mb-3 d-flex align-items-center gap-2">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Active Filters:</span>
+            @if (Model.SelectedCategoryId.HasValue)
+            {
+                <span class="badge bg-light text-dark border">Category: @Model.SelectedCategoryName</span>
+            }
+            @if (!string.IsNullOrEmpty(Model.SelectedMood))
+            {
+                <span class="badge bg-light text-dark border">Mood: @Model.SelectedMood</span>
+            }
+            @if (!string.IsNullOrEmpty(Model.SearchTerm))
+            {
+                <span class="badge bg-light text-dark border">Search: "@Model.SearchTerm"</span>
+            }
+            <a asp-controller="Posts" asp-action="Index" style="font-size: 0.82rem; font-weight: 700; margin-left: 0.5rem;">Clear All</a>
+        </div>
+    }
+
+    <!-- Posts Feed List -->
+    @if (!Model.Posts.Any())
+    {
+        <div class="form-card text-center py-5">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🍃</div>
+            <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">No thoughts found</h3>
+            <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 1.5rem;">
+                No anonymous posts match your selected filter. Be the first to share your experience or question in this section!
+            </p>
+            <a asp-controller="Posts" asp-action="Create" class="btn-primary-custom">
+                Share a Post Anonymously
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var post in Model.Posts)
+            {
+                <div class="col-12">
+                    <article class="post-card">
+                        <div class="post-meta-top">
+                            <div class="post-author-info">
+                                <div class="avatar-circle">🎭</div>
+                                <div>
+                                    <div class="author-alias">@post.AuthorAlias</div>
+                                    <div class="post-timestamp">@post.CreatedAt.ToString("MMM dd, yyyy • hh:mm tt")</div>
+                                </div>
+                            </div>
+                            <div class="post-badges">
+                                <span class="badge-category" style="background-color: @(post.CategoryBadgeColor ?? "#2563eb")15; color: @(post.CategoryBadgeColor ?? "#2563eb");">
+                                    @post.CategoryName
+                                </span>
+                                <span class="badge-mood">@post.MoodTag</span>
+                            </div>
+                        </div>
+
+                        <h2 class="post-title">
+                            <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.PostId">@post.Title</a>
+                        </h2>
+
+                        <p class="post-body-snippet">
+                            @(post.Content.Length > 280 ? post.Content.Substring(0, 280) + "..." : post.Content)
+                        </p>
+
+                        <div class="post-card-actions">
+                            <div class="post-action-group">
+                                <form asp-controller="Posts" asp-action="Support" asp-route-id="@post.PostId" method="post" style="display:inline;">
+                                    <button type="submit" class="action-btn support-btn" title="Send peer support">
+                                        ❤️ <span>@post.SupportCount Support</span>
+                                    </button>
+                                </form>
+
+                                <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.PostId" class="action-btn">
+                                    💬 <span>@post.CommentCount @(post.CommentCount == 1 ? "Comment" : "Comments")</span>
+                                </a>
+                            </div>
+
+                            <div>
+                                <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.PostId" class="btn-outline-custom" style="padding: 0.35rem 0.85rem; font-size: 0.82rem;">
+                                    Read Discussion &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            }
+        </div>
+    }
+</div>

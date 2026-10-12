@@ -1,0 +1,164 @@
+@model PostDetailsViewModel
+@{
+    ViewData["Title"] = Model.Post.Title;
+}
+
+<div class="post-detail-container">
+    <!-- Back to Feed Link -->
+    <div class="mb-3">
+        <a asp-controller="Posts" asp-action="Index" class="btn-outline-custom" style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.75rem; font-size: 0.85rem;">
+            &larr; Back to Feed
+        </a>
+    </div>
+
+    <!-- Main Post Content Card -->
+    <article class="post-detail-card">
+        <div class="post-meta-top">
+            <div class="post-author-info">
+                <div class="avatar-circle">🎭</div>
+                <div>
+                    <div class="author-alias">@Model.Post.AuthorAlias</div>
+                    <div class="post-timestamp">@Model.Post.CreatedAt.ToString("MMMM dd, yyyy • hh:mm tt")</div>
+                </div>
+            </div>
+
+            <div class="post-badges">
+                <span class="badge-category" style="background-color: @(Model.Post.CategoryBadgeColor ?? "#2563eb")15; color: @(Model.Post.CategoryBadgeColor ?? "#2563eb");">
+                    @Model.Post.CategoryName
+                </span>
+                <span class="badge-mood">@Model.Post.MoodTag</span>
+            </div>
+        </div>
+
+        <h1 class="post-detail-title">@Model.Post.Title</h1>
+
+        <div class="post-detail-content">
+            @Model.Post.Content
+        </div>
+
+        <!-- Post Action Toolbar -->
+        <div class="post-card-actions">
+            <div class="post-action-group">
+                <form asp-controller="Posts" asp-action="Support" asp-route-id="@Model.Post.PostId" method="post" style="display:inline;">
+                    <button type="submit" class="action-btn support-btn" title="Send peer encouragement">
+                        ❤️ <span>@Model.Post.SupportCount Support</span>
+                    </button>
+                </form>
+
+                <div class="action-btn" style="cursor: default;">
+                    💬 <span>@Model.Comments.Count @(Model.Comments.Count == 1 ? "Comment" : "Comments")</span>
+                </div>
+            </div>
+
+            <div>
+                <button type="button" class="action-btn report-btn" data-report-trigger data-post-id="@Model.Post.PostId" data-post-title="@Model.Post.Title">
+                    🚩 Report Post
+                </button>
+            </div>
+        </div>
+    </article>
+
+    <!-- Comments Section -->
+    <section class="comments-section mb-5">
+        <div class="comments-section-header">
+            <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0;">
+                Supportive Peer Comments (@Model.Comments.Count)
+            </h2>
+        </div>
+
+        <!-- Comment Submission Form -->
+        <div class="form-card mb-4">
+            <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">
+                Leave an Anonymous Word of Encouragement
+            </h3>
+
+            <form asp-controller="Comments" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="postId" value="@Model.Post.PostId" />
+
+                <div class="form-group">
+                    <label class="form-label-custom">Your Pseudonym / Alias (Optional)</label>
+                    <input type="text" name="authorAlias" class="form-control-custom" placeholder="e.g. Caring Senior, Helpful Peer, Anonymous Student" value="Supportive Peer" maxlength="50" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label-custom">Your Supportive Reply</label>
+                    <textarea name="content" rows="3" class="form-control-custom" placeholder="Share constructive advice, personal experiences, or simply say 'you are not alone'..." required minlength="2" maxlength="1500"></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Remember to stay kind and respectful.</span>
+                    <button type="submit" class="btn-primary-custom">Post Anonymous Reply</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Existing Comments List -->
+        @if (!Model.Comments.Any())
+        {
+            <div class="form-card text-center py-4">
+                <p style="color: var(--text-muted); margin-bottom: 0;">No comments yet. Be the first to send a message of encouragement!</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var comment in Model.Comments)
+            {
+                <div class="comment-card">
+                    <div class="comment-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="avatar-circle" style="width: 26px; height: 26px; font-size: 0.75rem;">💬</span>
+                            <span class="comment-author">@comment.AuthorAlias</span>
+                        </div>
+                        <span class="post-timestamp">@comment.CreatedAt.ToString("MMM dd • hh:mm tt")</span>
+                    </div>
+                    <div class="comment-text">
+                        @comment.Content
+                    </div>
+                </div>
+            }
+        }
+    </section>
+</div>
+
+<!-- Simple Vanilla Modal for Post Reporting -->
+<div id="reportModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center; padding: 1.5rem;">
+    <div style="background: #ffffff; border-radius: var(--radius-lg); max-width: 520px; width: 100%; padding: 2rem; box-shadow: var(--shadow-xl); position: relative;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: #dc2626; margin: 0;">🚩 Report Inappropriate Content</h3>
+            <button type="button" data-close-modal class="btn-close"></button>
+        </div>
+
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+            Help us maintain a safe college environment. You are reporting: <strong id="modalReportPostTitle">this post</strong>.
+        </p>
+
+        <form asp-controller="Posts" asp-action="Report" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="modalReportPostId" name="PostId" value="@Model.Post.PostId" />
+
+            <div class="form-group">
+                <label class="form-label-custom">Select Reason for Report *</label>
+                <select name="Reason" class="form-control-custom" required>
+                    <option value="">-- Choose a reason --</option>
+                    <option value="Bullying or Harassment">Bullying, personal attack, or harassment</option>
+                    <option value="Hate Speech or Abusive Language">Hate speech or inappropriate abusive language</option>
+                    <option value="Revealing Identity (Doxxing)">Revealing someone's private name or roll number (Doxxing)</option>
+                    <option value="Self-Harm or Crisis Concern">Self-harm, suicide, or mental emergency concern</option>
+                    <option value="Spam or Commercial Promotion">Spam, promotional ads, or cheating solicitation</option>
+                    <option value="Other Policy Violation">Other violation of community guidelines</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label-custom">Additional Remarks (Optional)</label>
+                <textarea name="DetailedRemarks" rows="2" class="form-control-custom" placeholder="Provide extra context for student moderators..." maxlength="500"></textarea>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" data-close-modal class="btn-outline-custom">Cancel</button>
+                <button type="submit" class="btn-danger-outline" style="padding: 0.55rem 1.25rem;">Submit Report</button>
+            </div>
+        </form>
+    </div>
+</div>
